@@ -1,34 +1,68 @@
 <?php
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
+header('Content-Type: application/json'); // Set the response content type to JSON
 
-// Define the base directory path
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 define('BASE_DIR', __DIR__);
 
-// Include the UserModel class definition using an absolute path
 require_once BASE_DIR . '/app/models/UserModel.php';
-
-// Include the PostData controller using an absolute path
 require_once BASE_DIR . '/app/controllers/AuthController.php';
 
-// Replace with your actual database credentials
-$db_host = 'localhost';
-$db_name = 'BlogMvc';
-$db_user = 'admin';
-$db_pass = 'admin';
+
+require_once BASE_DIR . '/app/models/ContactModel.php';
+require_once BASE_DIR . '/app/controllers/ContactController.php';
+
+
+// Define your database credentials
+$dbHost = 'localhost';
+$dbName = 'BLOGMVC';
+$dbUsername = 'admin';
+$dbPassword = 'admin';
 
 try {
-    $database = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8", $db_user, $db_pass);
+    $database = new PDO("mysql:host=$dbHost;dbname=$dbName;charset=utf8", $dbUsername, $dbPassword);
     $database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    echo "Data Connection Failed: " . $e->getMessage();
-    exit(); // Exit the script on database connection failure
+    $response = ["success" => false, "message" => "Database Error: " . $e->getMessage()];
+    echo json_encode($response);
+    exit();
 }
 
-// Create a new instance of PostData
-$postDataController = new PostData($database);
+// Determine the requested action based on the HTTP request method and URL
+$authController = new AuthController($database);
 
-// Handle the POST request (if any)
-$postDataController->PostDataa();
-$postDataController->GetBlog();
+//Contact Table
+$CreateTable = new ContactController($database);
+
+
+// Define routes for login and register actions
+$baseUri = "/MvcPhp/index.php"; // The base URI where your application is hosted
+
+$routes = [
+    "{$baseUri}/login" => "LoginUserData",
+    "{$baseUri}/register" => "PostUserRegister",
+    "{$baseUri}/contact" => "PostContact",
+];
+
+$requestUri = $_SERVER['REQUEST_URI'];
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    foreach ($routes as $route => $action) {
+        if (strpos($requestUri, $route) !== false) {
+            if ($action === "PostContact"){
+                $CreateTable->$action();
+                exit();
+            }else {
+            
+            // Call the corresponding controller method
+            $authController->$action();
+            exit(); // Stop processing after handling the request
+            }
+        }
+    }
+}
+
+$response = ["success" => false, "message" => "Invalid request"];
+echo json_encode($response);
 ?>

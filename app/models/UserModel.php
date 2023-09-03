@@ -1,92 +1,70 @@
 <?php
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-
-//Load Composer's autoloader
-require './vendor/autoload.php';
-
-class CreateUserBlog {
+class RegiUser {
     private $database;
 
     public function __construct($database) {
         $this->database = $database;
     }
 
-    public function createBlogTable() {
+    public function userTable() {
+        $createUserTable = "CREATE TABLE IF NOT EXISTS User(id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, username VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, date DATE NOT NULL)";
+        $createTable = $this->database->prepare($createUserTable);
+        $createTable->execute();
+    }
+
+    public function userRegister($username, $email, $password, $date) {
         try {
-            // Create the 'Blog' table if it doesn't exist
-            $createTable = "CREATE TABLE IF NOT EXISTS BLOG (
-                id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-                title VARCHAR(120) NOT NULL,
-                username VARCHAR(120) NOT NULL,
-                text_title VARCHAR(120) NOT NULL
-            )";
-            $stmt = $this->database->prepare($createTable);
-            $stmt->execute();
+            $this->userTable();
+
+            $insertUserData = "INSERT INTO User(username, email, password, date) VALUES (:username, :email, :password, :date)";
+            $insertIntoData = $this->database->prepare($insertUserData);
+            $insertIntoData->bindParam(":username", $username);
+            $insertIntoData->bindParam(":email", $email);
+            $insertIntoData->bindParam(":password", $password);
+            $insertIntoData->bindParam(":date", $date);
+
+            if ($insertIntoData->execute()) {
+                return true;
+            } else {
+                return false; // Return false on failure
+            }
         } catch (PDOException $e) {
-            echo "Error creating table: " . $e->getMessage();
+            return "PDOException: " . $e->getMessage(); // Return the error message on failure
         }
     }
 
-    public function postUser($title, $username, $text_title) {
+    public function loginUser($email, $password) {
         try {
-            // Call the createBlogTable method to create the 'Blog' table
-            $this->createBlogTable();
-    
-            // Check if a blog with the same title already exists
-            $checkExisting = "SELECT COUNT(*) FROM BLOG WHERE title=:title";
-            $checkExistingStmt = $this->database->prepare($checkExisting);
-            $checkExistingStmt->bindParam(':title', $title);
-            $checkExistingStmt->execute();
-    
-            $existingCount = $checkExistingStmt->fetchColumn();
-    
-            if ($existingCount == 0) {
-                // Insert data into the 'Blog' table only if the blog doesn't exist
-                $postData = "INSERT INTO BLOG (title, username, text_title) VALUES (:title, :username, :text_title)";
-                $stmt = $this->database->prepare($postData);
-                $stmt->bindParam(":title", $title);
-                $stmt->bindParam(":username", $username);
-                $stmt->bindParam(":text_title", $text_title);
-                $stmt->execute();
-                
-                echo "Blog inserted successfully.";
+            $this->userTable();
+
+            $selectEmail = "SELECT * FROM User WHERE email=:email";
+            $selectUserByEmail = $this->database->prepare($selectEmail);
+            $selectUserByEmail->bindParam(':email', $email);
+            $selectUserByEmail->execute();
+            $user = $selectUserByEmail->fetch(PDO::FETCH_ASSOC);
+
+            if ($user && password_verify($password, $user['password'])) {
+                return true;
             } else {
-                echo "Blog with title '$title' already exists.";
+                return false;
             }
         } catch (PDOException $e) {
-            echo "Error inserting data: " . $e->getMessage();
-        }
-    }
-    
-    public function getBlogData() {
-        try {
-            // Call the createBlogTable method to ensure the table exists
-            $this->createBlogTable();
-    
-            // Query to retrieve data from the 'Blog' table
-            $getData = "SELECT * FROM BLOG";
-            $stmt = $this->database->prepare($getData);
-            $stmt->execute();
-    
-            // Fetch data as an associative array
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-            // Check if there is any data
-            if ($result) {
-                // Return the data as JSON
-                echo json_encode($result);
-            } else {
-                // Return a message if no data is found
-                echo json_encode(["message" => "No data found"]);
-            }
-        } catch (PDOException $e) {
-            echo "Error retrieving data: " . $e->getMessage();
+            return "PDOException: " . $e->getMessage();
         }
     }
 
-    
+    public function CheckExestingUserEmail($email){
+        $this->userTable();
+
+        $CheckUserSql = "SELECT * FROM User WHERE email = :email";
+
+        $Cheking = $this->database->prepare($CheckUserSql);
+        $Cheking->bindParam(":email", $email);
+        $Cheking->execute();
+
+        $CheckEmail = $Cheking->fetchColumn();
+
+        return $CheckEmail;
+    }
 }
 ?>
