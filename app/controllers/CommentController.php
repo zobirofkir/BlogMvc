@@ -45,5 +45,20 @@
             }
 
         }
+
+        public function GetAllComment()
+        {
+            header('Content-Type: application/json');
+    
+            $GetComment = new CommentModels($this->database);
+            $GetAllComment = $GetComment->GetComment();
+            
+            if (!empty($GetAllComment)) { // Check if $GetAllComment is not empty
+                echo json_encode(["success" => true, "comments" => $GetAllComment]);
+            } else {
+                echo json_encode(["success" => false, "message" => "No comments found"]);
+            }
+        }
+    
     }
 ?>

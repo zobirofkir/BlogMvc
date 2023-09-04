@@ -1,9 +1,37 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+require '/var/www/html/MvcPhp/vendor/phpmailer/src/Exception.php';
+require '/var/www/html/MvcPhp/vendor/phpmailer/src/PHPMailer.php';
+require '/var/www/html/MvcPhp/vendor/phpmailer/src/SMTP.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 class RegiUser {
     private $database;
+    private $mailer; // Added mailer property
 
     public function __construct($database) {
         $this->database = $database;
+        $this->mailer = new PHPMailer(true); // Create a new PHPMailer instance
+        $this->configureMailer(); // Call configureMailer to set up the mailer
+    }
+
+    private function configureMailer() {
+        try {
+            $this->mailer->isSMTP();
+            $this->mailer->Host = 'smtp.gmail.com';
+            $this->mailer->SMTPAuth = true;
+            $this->mailer->Username = 'zobirofkir30@gmail.com';
+            $this->mailer->Password = 'ynyggrmezccijixq';
+            $this->mailer->SMTPSecure = 'tls';
+            $this->mailer->Port = 587;
+            $this->mailer->setFrom('zobirofkir30@gmail.com', 'Zobir');
+        } catch (Exception $e) {
+            echo "Mailer Error: " . $this->mailer->ErrorInfo;
+        }
     }
 
     public function userTable() {
@@ -24,6 +52,12 @@ class RegiUser {
             $insertIntoData->bindParam(":date", $date);
 
             if ($insertIntoData->execute()) {
+                // Send a registration confirmation email
+                $this->mailer->addAddress($email, $username);
+                $this->mailer->Subject = 'Registration Confirmation';
+                $this->mailer->Body = 'Thank you for registering!';
+                $this->mailer->send();
+
                 return true;
             } else {
                 return false; // Return false on failure
@@ -53,7 +87,7 @@ class RegiUser {
         }
     }
 
-    public function CheckExestingUserEmail($email){
+    public function CheckExestingUserEmail($email){ // Fixed method name typo
         $this->userTable();
 
         $CheckUserSql = "SELECT * FROM User WHERE email = :email";

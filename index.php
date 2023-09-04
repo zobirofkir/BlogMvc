@@ -1,4 +1,9 @@
 <?php
+
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET"); // Allow both POST and GET requests
+header("Access-Control-Allow-Headers: Content-Type");
+
 header('Content-Type: application/json'); // Set the response content type to JSON
 
 error_reporting(E_ALL);
@@ -9,13 +14,11 @@ define('BASE_DIR', __DIR__);
 require_once BASE_DIR . '/app/models/UserModel.php';
 require_once BASE_DIR . '/app/controllers/AuthController.php';
 
-
 require_once BASE_DIR . '/app/models/ContactModel.php';
 require_once BASE_DIR . '/app/controllers/ContactController.php';
 
 require_once BASE_DIR . '/app/models/CommentModel.php';
 require_once BASE_DIR . '/app/controllers/CommentController.php';
-
 
 // Define your database credentials
 $dbHost = 'localhost';
@@ -35,10 +38,10 @@ try {
 // Determine the requested action based on the HTTP request method and URL
 $authController = new AuthController($database);
 
-//Contact Table
+// Contact Table
 $CreateTable = new ContactController($database);
 
-//Comment Table
+// Comment Table
 $CreateCommentTable = new CommentController($database);
 
 // Define routes for login and register actions
@@ -49,6 +52,7 @@ $routes = [
     "{$baseUri}/register" => "PostUserRegister",
     "{$baseUri}/contact" => "PostContact",
     "{$baseUri}/comment" => "PostCommentController",    
+    "{$baseUri}/get/comment" => "GetAllComment",    
 ];
 
 $requestUri = $_SERVER['REQUEST_URI'];
@@ -56,20 +60,33 @@ $requestUri = $_SERVER['REQUEST_URI'];
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     foreach ($routes as $route => $action) {
         if (strpos($requestUri, $route) !== false) {
-            if ($action === "PostContact"){
+            if ($action === "PostContact") {
                 $CreateTable->$action();
                 exit();
-            }else if ($action === "PostCommentController"){
+            } else if ($action === "PostCommentController") {
                 $CreateCommentTable->$action();
                 exit();
-            }else {
-            // Call the corresponding controller method
-            $authController->$action();
-            exit(); // Stop processing after handling the request
+            } else {
+                // Call the corresponding controller method
+                $authController->$action();
+                exit(); // Stop processing after handling the request
             }
         }
     }
 }
+
+if ($_SERVER["REQUEST_METHOD"] === "GET") {
+    foreach ($routes as $route => $action) {
+        if (strpos($requestUri, $route) !== false) {
+            if ($action === "GetAllComment") {
+                $CreateCommentTable->$action();
+                exit();
+            }
+        }
+    }
+}
+
+
 
 $response = ["success" => false, "message" => "Invalid request"];
 echo json_encode($response);

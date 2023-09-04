@@ -58,5 +58,21 @@
                 return "Bad Request" . $e->getMessage();
             }
         }
+
+        public function GetComment()
+        {
+            try {
+                $GetCommentSql = "SELECT * FROM Comment";
+                $GetCommentIntoData = $this->database->prepare($GetCommentSql);
+                $GetCommentIntoData->execute(); // Execute the query
+    
+                $GetCommentIntoDataBase = $GetCommentIntoData->fetchAll(PDO::FETCH_ASSOC);
+    
+                return $GetCommentIntoDataBase;
+            } catch (PDOException $e) {
+                return false; // Return false instead of a string
+            }
+        }
+    
     }
 ?>
