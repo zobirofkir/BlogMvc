@@ -13,6 +13,9 @@ require_once BASE_DIR . '/app/controllers/AuthController.php';
 require_once BASE_DIR . '/app/models/ContactModel.php';
 require_once BASE_DIR . '/app/controllers/ContactController.php';
 
+require_once BASE_DIR . '/app/models/CommentModel.php';
+require_once BASE_DIR . '/app/controllers/CommentController.php';
+
 
 // Define your database credentials
 $dbHost = 'localhost';
@@ -35,6 +38,8 @@ $authController = new AuthController($database);
 //Contact Table
 $CreateTable = new ContactController($database);
 
+//Comment Table
+$CreateCommentTable = new CommentController($database);
 
 // Define routes for login and register actions
 $baseUri = "/MvcPhp/index.php"; // The base URI where your application is hosted
@@ -43,6 +48,7 @@ $routes = [
     "{$baseUri}/login" => "LoginUserData",
     "{$baseUri}/register" => "PostUserRegister",
     "{$baseUri}/contact" => "PostContact",
+    "{$baseUri}/comment" => "PostCommentController",    
 ];
 
 $requestUri = $_SERVER['REQUEST_URI'];
@@ -53,8 +59,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($action === "PostContact"){
                 $CreateTable->$action();
                 exit();
+            }else if ($action === "PostCommentController"){
+                $CreateCommentTable->$action();
+                exit();
             }else {
-            
             // Call the corresponding controller method
             $authController->$action();
             exit(); // Stop processing after handling the request
