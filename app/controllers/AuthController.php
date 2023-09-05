@@ -88,5 +88,58 @@ class AuthController {
         $response = ["success" => false, "message" => "Invalid request"];
         echo json_encode($response); // Echo the JSON response
     }
+
+    public function GetUserController(){
+        $GetUserDataController = new RegiUser($this->database);
+        $GetUserJson = $GetUserDataController->GetUserModel();
+        if (!empty($GetUserJson)){
+            $response = ["success"=>true, "data"=>$GetUserJson];
+            echo json_encode($response);
+            return;
+        }else{
+            $response = ["success"=>false];
+            echo json_encode($response);
+            return;
+        }
+    }
+    public function UpdateUser() {
+        try{
+            if ($_SERVER["REQUEST_METHOD"] === "PUT") {
+                $PostData = file_get_contents("php://input");
+                $PostDataArray = json_decode($PostData, true);
+                
+                if (isset($PostDataArray["userId"]) && isset($PostDataArray["newUsername"]) && isset($PostDataArray["newEmail"]) && isset($PostDataArray["newPassword"]) && isset($PostDataArray["newDate"])) {
+                    $userId = intval($PostDataArray["userId"]);
+                    $newUsername = htmlspecialchars($PostDataArray["newUsername"], FILTER_SANITIZE_SPECIAL_CHARS);
+                    $newEmail = filter_var($PostDataArray["newEmail"], FILTER_VALIDATE_EMAIL);
+                    $newPassword = htmlspecialchars($PostDataArray["newPassword"], FILTER_SANITIZE_SPECIAL_CHARS);
+                    $newDate = intval($PostDataArray["newDate"]);
+            
+                    $UpdateClass = new RegiUser($this->database);
+                    $UpdateFunction = $UpdateClass->UpdateUserById($userId, $newUsername, $newEmail, $newPassword, $newDate);
+            
+                    if ($UpdateFunction === true) {
+                        $response = ["success" => true];
+                        http_response_code(200); // Success
+                    }else if ($UpdateFunction === false){
+                        $response = ["success" => false, "message" => "Failed to update user"];
+                        http_response_code(400); // Bad Request
+                    }
+                    else {
+                        $response = ["success" => false];
+                        http_response_code(400); // Bad Request
+                    }
+                } else {
+                    $response = ["success" => false];
+                    http_response_code(400); // Bad Request
+                }
+            
+                header('Content-Type: application/json'); // Set the response content type to JSON
+                echo json_encode($response);
+            }    
+        }catch(PDOException $e){
+            return false . $e->getMessage();
+        }
+    }    
 }
 ?>

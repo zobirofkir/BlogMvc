@@ -1,7 +1,6 @@
 <?php
-
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET"); // Allow both POST and GET requests
+header("Access-Control-Allow-Methods: POST, GET, PUT"); // Allow POST, GET, and PUT requests
 header("Access-Control-Allow-Headers: Content-Type");
 
 header('Content-Type: application/json'); // Set the response content type to JSON
@@ -44,15 +43,18 @@ $CreateTable = new ContactController($database);
 // Comment Table
 $CreateCommentTable = new CommentController($database);
 
-// Define routes for login and register actions
+// Define routes for login, register, contact, comment, and user actions
 $baseUri = "/MvcPhp/index.php"; // The base URI where your application is hosted
 
 $routes = [
     "{$baseUri}/login" => "LoginUserData",
     "{$baseUri}/register" => "PostUserRegister",
     "{$baseUri}/contact" => "PostContact",
-    "{$baseUri}/comment" => "PostCommentController",    
-    "{$baseUri}/get/comment" => "GetAllComment",    
+    "{$baseUri}/comment" => "PostCommentController",
+    "{$baseUri}/get/comment" => "GetAllComment",
+    "{$baseUri}/get/user" => "GetUserController",
+    "{$baseUri}/update" => "UpdateUser",
+    "{$baseUri}/delete" => "DeleteCommentControllers",
 ];
 
 $requestUri = $_SERVER['REQUEST_URI'];
@@ -63,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($action === "PostContact") {
                 $CreateTable->$action();
                 exit();
-            } else if ($action === "PostCommentController") {
+            } elseif ($action === "PostCommentController") {
                 $CreateCommentTable->$action();
                 exit();
             } else {
@@ -81,11 +83,35 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
             if ($action === "GetAllComment") {
                 $CreateCommentTable->$action();
                 exit();
+            } elseif ($action === "GetUserController") {
+                $authController->$action();
+                exit();
             }
         }
     }
 }
 
+if ($_SERVER["REQUEST_METHOD"] === "PUT") {
+    foreach ($routes as $route => $action) {
+        if (strpos($requestUri, $route) !== false) {
+            if ($action === "UpdateUser") {
+                $authController->$action();
+                exit();
+            }
+        }
+    }
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "DELETE") {
+    foreach ($routes as $route => $action) {
+        if (strpos($requestUri, $route) !== false) {
+            if ($action === "DeleteCommentControllers") {
+                $CreateCommentTable->$action();
+                exit();
+            }
+        }
+    }
+}
 
 
 $response = ["success" => false, "message" => "Invalid request"];

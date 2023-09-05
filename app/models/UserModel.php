@@ -100,5 +100,45 @@ class RegiUser {
 
         return $CheckEmail;
     }
+
+    public function GetUserModel(){
+        $this->userTable();
+        
+        $GetUserData = "SELECT username, email FROM User";
+        $GetUserDataNo = $this->database->prepare($GetUserData);
+        $GetUserDataNo->execute();
+
+        $GetUserDataBase = $GetUserDataNo->fetchAll(PDO::FETCH_ASSOC);
+        return $GetUserDataBase;
+    }
+
+    public function UpdateUserById($userId, $newUsername, $newEmail, $newPassword, $newDate) {
+        try {
+            $this->userTable();
+
+            // Update the user's information based on their ID
+            $updateUserData = "UPDATE User SET username = :newUsername, email = :newEmail, password = :newPassword, date = :newDate WHERE id = :userId";
+            $updateData = $this->database->prepare($updateUserData);
+
+            // Bind parameters with the correct data types
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+            $updateData->bindParam(":newUsername", $newUsername, PDO::PARAM_STR);
+            $updateData->bindParam(":newEmail", $newEmail, PDO::PARAM_STR);
+            $updateData->bindParam(":newPassword", $hashedPassword, PDO::PARAM_STR);
+            $updateData->bindParam(":newDate", $newDate, PDO::PARAM_INT);
+            $updateData->bindParam(":userId", $userId, PDO::PARAM_INT);
+
+            if ($updateData->execute()) {
+                // Send a confirmation email or perform any other necessary actions
+                return true;
+            }else {
+                return false;
+            }
+    
+        } catch (PDOException $e) {
+            // You can log the error here if needed
+            return false . $e->getMessage();
+        }
+    }
 }
 ?>

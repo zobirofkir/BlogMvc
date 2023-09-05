@@ -74,5 +74,21 @@
             }
         }
     
+        public function DeleteCommentModels($commentId){
+            try {
+                $DeleteMySql = "DELETE FROM Comment WHERE id = :commentId";
+                $DeleteUsingPrepare = $this->database->prepare($DeleteMySql);
+                $DeleteUsingPrepare->bindParam(":commentId", $commentId, PDO::PARAM_INT);
+        
+                if ($DeleteUsingPrepare->execute()) {
+                    return true; // Return true on success
+                } else {
+                    return false; // Return false on failure
+                }
+            } catch (PDOException $e) {
+                // Handle any PDO exceptions
+                return false . $e->getMessage();
+            }
+        }        
     }
 ?>

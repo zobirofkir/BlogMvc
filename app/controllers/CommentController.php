@@ -59,6 +59,36 @@
                 echo json_encode(["success" => false, "message" => "No comments found"]);
             }
         }
-    
+
+        public function DeleteCommentControllers(){
+            header("Content-Type: application/json");
+        
+            try {
+                if ($_SERVER["REQUEST_METHOD"] === "DELETE") {
+                    $PostData = file_get_contents("php://input");
+                    $DeteleDataArray = json_decode($PostData, true);
+        
+                    if (isset($DeteleDataArray["commentId"])) {
+                        $commentId = $DeteleDataArray["commentId"];
+        
+                        $GetClass = new CommentModels($this->database);
+                        $DeleteFunction = $GetClass->DeleteCommentModels($commentId);
+        
+                        if ($DeleteFunction === true) {
+                            $response = ["success" => true];
+                            echo json_encode($response);
+                        } else {
+                            $response = ["success" => false];
+                            echo json_encode($response);
+                        }
+                    }
+                }
+            } catch (PDOException $S) {
+                // Handle any PDO exceptions
+                $response = ["error" => $S->getMessage()];
+                http_response_code(500); // Internal Server Error
+                echo json_encode($response);
+            }
+        }                    
     }
 ?>
